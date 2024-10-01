@@ -21,7 +21,7 @@ logging.basicConfig(level=logging.INFO)
 # Load environment variables
 load_dotenv()
 
-def process_page(page, debug__download_on):
+def process_page(page):
     page_slug = page['slug']
 
     try:
@@ -36,22 +36,21 @@ def process_page(page, debug__download_on):
 
     logging.info(f"Processing page: {page_title_de} (Author: {content_author}, Slug: {page_slug})")
 
-    if debug__download_on:
-        backup_dir = Path(Path("local_backup"), "pages", page_slug)
-        backup_dir.mkdir(parents=True, exist_ok=True)
+    backup_dir = Path(Path("local_backup"), "pages", page_slug)
+    backup_dir.mkdir(parents=True, exist_ok=True)
 
-        try:
-            page_file = backup_dir / "page.json"
-            with page_file.open('w', encoding='utf-8') as f:
-                json.dump(page, f, indent=4, sort_keys=True)
-            logging.info(f"Saved JSON content for {page_slug}")
-        except IOError as e:
-            logging.error(f"Error saving JSON content for {page_slug}: {e}")
+    try:
+        page_file = backup_dir / "page.json"
+        with page_file.open('w', encoding='utf-8') as f:
+            json.dump(page, f, indent=4, sort_keys=True)
+        logging.info(f"Saved JSON content for {page_slug}")
+    except IOError as e:
+        logging.error(f"Error saving JSON content for {page_slug}: {e}")
 
     # TODO: Check rate limits and adapt wait time accordingly
     time.sleep(1)
 
-def main(base_url, download_restricted, debug__download_on):
+def main(base_url, download_restricted):
     api_key = os.getenv('API_KEY')
     if not api_key:
         raise ValueError("API_KEY must be set in the .env file")
@@ -81,21 +80,18 @@ def main(base_url, download_restricted, debug__download_on):
 
         # Loop through the pages and download content
         for page in pages['items']:
-            if page['restricted'] and not download_restricted:
+            if not page['restricted'] or download_restricted:
+                process_page(page)
+            else:
                 logging.info(f"Skipping restricted entry: {page['slug']}")
-                continue
-
-            process_page(page, debug__download_on)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Download ODS pages from data.bs.ch")
     parser.add_argument("--base-url", default="https://data.bs.ch/api/management/v2/pages/",
                         help="Base URL for the API")
-    parser.add_argument("--download-restricted", action="store_true",
+    parser.add_argument("--download-restricted", type=bool, default=True,
                         help="Download restricted pages")
-    parser.add_argument("--debug-download-on", action="store_true",
-                        help="Enable debug mode and save JSON content locally")
 
     args = parser.parse_args()
 
-    main(args.base_url, args.download_restricted, args.debug_download_on)
+    main(args.base_url, args.download_restricted)
