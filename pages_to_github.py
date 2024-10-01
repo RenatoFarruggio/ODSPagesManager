@@ -13,6 +13,8 @@ from dotenv import load_dotenv
 # TODO: Check if page is already in repo and up to date, if so skip it
 # TODO: Add error handling
 # TODO: Implement progress tracking
+# TODO: Add script to scripts folder
+# TODO: Add test to test folder
 
 
 # Set up logging
