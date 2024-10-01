@@ -1,7 +1,7 @@
+**/__pycache__/
 **/.credentials
 **/.env
 **/.venv
 .idea
 .cursorignore
 local_backup/*
-
