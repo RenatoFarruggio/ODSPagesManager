@@ -1,8 +1,18 @@
 # ODS Pages Manager for data.bs.ch
 This is a script that downloads opendatasoft (ODS) pages.
 
+## Setup with venv (recommended)
+- Create virtual environment: `python -m venv .venv`
+- Activate virtual environment: `.venv\Scripts\activate`
+- Install requirements: `pip install -r requirements.txt`
+- Create .env file from .env.template and insert API key from the [Back-Office](https://data.bs.ch/account/api-keys/). It needs two permissions: "Alle Seiten durchsuchen" and "Alle Seiten bearbeiten"
+
+## Setup without venv
+- Install requirements: `pip install -r requirements.txt`
+- Create .env file from .env.template and insert API key from the [Back-Office](https://data.bs.ch/account/api-keys/). It needs two permissions: "Alle Seiten durchsuchen" and "Alle Seiten bearbeiten"
+
 ## Usage
-Install requirements from the requirements.txt: `pip install -r requirements.txt`. Then, create .env file from .env.template and insert API key from the [Back-Office](https://data.bs.ch/account/api-keys/). It needs two permissions: "Alle Seiten durchsuchen" and "Alle Seiten bearbeiten". Run script with `python pages_to_github.py`.
+Run script with `python pages_to_github.py`
 
 ## TODO
 - Version control with git
