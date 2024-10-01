@@ -14,6 +14,14 @@ base_url = f"https://data.bs.ch/api/management/v2/pages/"
 
 download_restricted = os.getenv('download_restricted')
 upload_restricted_to_github = os.getenv('upload_restricted_to_github')
+debug__download_on = False
+
+# Path structure:
+#
+# local_backup
+# - pages
+# - custom_views
+#
 
 if not api_key or not base_url:
     raise ValueError("API_KEY and BASE_URL must be set in the .env file")
@@ -41,7 +49,7 @@ while True:
 
     if len(pages['items']) == 0:
         break
-    print(f"Downloading {pages['rows']} entries from page {page_number}...")
+    print(f"Accessing {pages['rows']} entries from page {page_number}...")
     print("=" * 40)
     page_number += 1
 
@@ -64,24 +72,23 @@ while True:
         except KeyError:
             content_author = '[Author not found]'
 
-        # title_de (author: slug)
-        # title_de [author: slug]
         print(f"Page Title: {page_title_de}")
         print(f"Author: {content_author}")
         print(f"Slug: {page_slug}")
         print("-" * 40)
 
-        backup_dir = Path("local_backup") / page_slug
-        backup_dir.mkdir(parents=True, exist_ok=True)
+        if debug__download_on:
+            backup_dir = Path(os.path.join(Path("local_backup"), "pages", page_slug))
+            backup_dir.mkdir(parents=True, exist_ok=True)
 
-        try:
-            page_file = backup_dir / "page.json"
-            with page_file.open('w', encoding='utf-8') as f:
-                json.dump(page, f, indent=4, sort_keys=True)
-                #file.write(html.unescape(html_file))
-            logging.info(f"Saved HTML content for {page_slug}")
-        except IOError as e:
-            logging.error(f"Error saving HTML content for {page_slug}: {e}")
+            try:
+                page_file = backup_dir / "page.json"
+                with page_file.open('w', encoding='utf-8') as f:
+                    json.dump(page, f, indent=4, sort_keys=True)
+                    #file.write(html.unescape(html_file))
+                logging.info(f"Saved HTML content for {page_slug}")
+            except IOError as e:
+                logging.error(f"Error saving HTML content for {page_slug}: {e}")
 
         # TODO: Check rate limits and adapt wait time accordingly
         time.sleep(1)
