@@ -1,39 +1,19 @@
-import os
 import time
-from dotenv import load_dotenv
 import requests
 import json
 import logging
 from pathlib import Path
+import argparse
+import os
+from dotenv import load_dotenv
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 
+# Load environment variables
 load_dotenv()
-api_key = os.getenv('API_KEY')
 
-base_url = f"https://data.bs.ch/api/management/v2/pages/"
-
-download_restricted = os.getenv('download_restricted')
-upload_restricted_to_github = os.getenv('upload_restricted_to_github')
-debug__download_on = False
-
-# Path structure:
-#
-# local_backup
-# - pages
-# - custom_views
-#
-
-if not api_key or not base_url:
-    raise ValueError("API_KEY and BASE_URL must be set in the .env file")
-
-# Set up headers with the API key for authentication
-headers = {
-    'Authorization': f'Apikey {api_key}'
-}
-
-def process_page(page):
+def process_page(page, debug__download_on):
     page_slug = page['slug']
 
     try:
@@ -49,7 +29,7 @@ def process_page(page):
     logging.info(f"Processing page: {page_title_de} (Author: {content_author}, Slug: {page_slug})")
 
     if debug__download_on:
-        backup_dir = Path(os.path.join(Path("local_backup"), "pages", page_slug))
+        backup_dir = Path(Path("local_backup"), "pages", page_slug)
         backup_dir.mkdir(parents=True, exist_ok=True)
 
         try:
@@ -63,7 +43,16 @@ def process_page(page):
     # TODO: Check rate limits and adapt wait time accordingly
     time.sleep(1)
 
-def main():
+def main(base_url, download_restricted, debug__download_on):
+    api_key = os.getenv('API_KEY')
+    if not api_key:
+        raise ValueError("API_KEY must be set in the .env file")
+
+    # Set up headers with the API key for authentication
+    headers = {
+        'Authorization': f'Apikey {api_key}'
+    }
+
     page_number = 1
     while True:
         # Make a request to the API to get a list of ODS pages
@@ -88,7 +77,17 @@ def main():
                 logging.info(f"Skipping restricted entry: {page['slug']}")
                 continue
 
-            process_page(page)
+            process_page(page, debug__download_on)
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Download ODS pages from data.bs.ch")
+    parser.add_argument("--base-url", default="https://data.bs.ch/api/management/v2/pages/",
+                        help="Base URL for the API")
+    parser.add_argument("--download-restricted", action="store_true",
+                        help="Download restricted pages")
+    parser.add_argument("--debug-download-on", action="store_true",
+                        help="Enable debug mode and save JSON content locally")
+
+    args = parser.parse_args()
+
+    main(args.base_url, args.download_restricted, args.debug_download_on)
