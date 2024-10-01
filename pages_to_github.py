@@ -7,6 +7,14 @@ import argparse
 import os
 from dotenv import load_dotenv
 
+## TODOs
+# TODO: Change from Management API to Automation API
+# TODO: Check rate limits and adapt wait time accordingly
+# TODO: Check if page is already in repo and up to date, if so skip it
+# TODO: Add error handling
+# TODO: Implement progress tracking
+
+
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 
