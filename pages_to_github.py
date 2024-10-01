@@ -6,6 +6,9 @@ import json
 import logging
 from pathlib import Path
 
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+
 load_dotenv()
 api_key = os.getenv('API_KEY')
 
@@ -30,42 +33,6 @@ headers = {
     'Authorization': f'Apikey {api_key}'
 }
 
-def main():
-    page_number = 1
-    while True:
-        # Make a request to the API to get a list of ODS pages
-        response = requests.get(f"{base_url}?page={page_number}", headers=headers)
-
-        # Check the response status and print detailed error information if needed
-        if response.status_code != 200:
-            print(f"Failed to retrieve pages. Status code: {response.status_code}")
-            print(f"Response content: {response.text}")
-            raise Exception("API request failed")
-
-        # Parse the JSON response
-        pages = response.json()
-
-        if len(pages['items']) == 0:
-            break
-        print(f"Accessing {pages['rows']} entries from page {page_number}...")
-        print("=" * 40)
-        page_number += 1
-
-        # Loop through the pages and download content
-        for page in pages['items']:
-            if page['restricted'] and not download_restricted:
-                print(f"Skipping restricted entry: {page['slug']}")
-                continue
-
-            process_page(page)
-
-        print("")
-
-    # TODO: logging
-    # TODO: replace print with logging
-    # TODO: Write README.md for user
-
-
 def process_page(page):
     page_slug = page['slug']
 
@@ -79,10 +46,7 @@ def process_page(page):
     except KeyError:
         content_author = '[Author not found]'
 
-    print(f"Page Title: {page_title_de}")
-    print(f"Author: {content_author}")
-    print(f"Slug: {page_slug}")
-    print("-" * 40)
+    logging.info(f"Processing page: {page_title_de} (Author: {content_author}, Slug: {page_slug})")
 
     if debug__download_on:
         backup_dir = Path(os.path.join(Path("local_backup"), "pages", page_slug))
@@ -92,12 +56,39 @@ def process_page(page):
             page_file = backup_dir / "page.json"
             with page_file.open('w', encoding='utf-8') as f:
                 json.dump(page, f, indent=4, sort_keys=True)
-            logging.info(f"Saved HTML content for {page_slug}")
+            logging.info(f"Saved JSON content for {page_slug}")
         except IOError as e:
-            logging.error(f"Error saving HTML content for {page_slug}: {e}")
+            logging.error(f"Error saving JSON content for {page_slug}: {e}")
 
     # TODO: Check rate limits and adapt wait time accordingly
     time.sleep(1)
+
+def main():
+    page_number = 1
+    while True:
+        # Make a request to the API to get a list of ODS pages
+        response = requests.get(f"{base_url}?page={page_number}", headers=headers)
+
+        if response.status_code != 200:
+            logging.error(f"Failed to retrieve pages. Status code: {response.status_code}")
+            logging.error(f"Response content: {response.text}")
+            raise Exception("API request failed")
+
+        # Parse the JSON response
+        pages = response.json()
+
+        if len(pages['items']) == 0:
+            break
+        logging.info(f"Accessing {pages['rows']} entries from page {page_number}...")
+        page_number += 1
+
+        # Loop through the pages and download content
+        for page in pages['items']:
+            if page['restricted'] and not download_restricted:
+                logging.info(f"Skipping restricted entry: {page['slug']}")
+                continue
+
+            process_page(page)
 
 if __name__ == "__main__":
     main()
