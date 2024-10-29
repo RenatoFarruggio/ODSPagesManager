@@ -12,7 +12,8 @@ This is a script that downloads opendatasoft (ODS) pages.
 - Create .env file from .env.template and insert API key from the [Back-Office](https://data.bs.ch/account/api-keys/). It needs two permissions: "Alle Seiten durchsuchen" and "Alle Seiten bearbeiten"
 
 ## Usage
-Run script with `python pages_to_github.py`
+Run script with `python pages_to_github.py`. This will download a json file of the entire page, and also the separate 
+html and css files for all pages.
 
 ## TODO
 - Version control with git

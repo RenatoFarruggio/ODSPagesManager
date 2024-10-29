@@ -49,8 +49,42 @@ def process_page(page):
     except IOError as e:
         logging.error(f"Error saving JSON content for {page_slug}: {e}")
 
+    try:
+        page_file = backup_dir / f"{page.get('template', 'index.html')}"
+        with page_file.open('w', encoding='utf-8') as f:
+            json.dump(page['content']['html']['de'], f, indent=4, sort_keys=True)
+        logging.info(f"Saved HTML content for {page_slug}")
+    except IOError as e:
+        logging.error(f"Error saving HTML content for {page_slug}: {e}")
+
+    try:
+        page_file = backup_dir / "page.css"
+        with page_file.open('w', encoding='utf-8') as f:
+            json.dump(page['content']['css']['de'], f, indent=4, sort_keys=True)
+        logging.info(f"Saved CSS content for {page_slug}")
+    except IOError as e:
+        logging.error(f"Error saving CSS content for {page_slug}: {e}")
+
     # TODO: Check rate limits and adapt wait time accordingly
     time.sleep(1)
+
+def list_studio_pages(api_key, domain):
+    url = f"https://{domain}/api/automation/v1.0/studio_pages/"
+    headers = {
+        "Authorization": f"Bearer {api_key}"
+    }
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+    return response.json()
+
+def retrieve_studio_page(api_key, domain, page_slug):
+    url = f"https://{domain}/api/automation/v1.0/studio_pages/{page_slug}/"
+    headers = {
+        "Authorization": f"Bearer {api_key}"
+    }
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+    return response.json()
 
 def main(base_url, download_restricted):
     api_key = os.getenv('API_KEY')
